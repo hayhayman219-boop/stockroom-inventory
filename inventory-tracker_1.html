@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stockroom">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#12151B">
+<title>Stockroom — Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12151B;
+    --surface:#1B1F27;
+    --surface-raised:#232833;
+    --border:#2E3440;
+    --border-strong:#3B4250;
+    --paper:#EDEAE2;
+    --paper-dim:#9AA1AE;
+    --paper-faint:#5F6675;
+    --amber:#E8A33D;
+    --amber-dim:#4A3A1E;
+    --red:#E0665F;
+    --red-dim:#4A2422;
+    --green:#6FAE8B;
+    --green-dim:#20362D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:100px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px;}
+
+  header{
+    padding:28px 16px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .brand{
+    display:flex;align-items:baseline;gap:10px;
+    max-width:560px;margin:0 auto;
+  }
+  .brand .mark{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;font-weight:600;
+    color:var(--amber);
+    border:1px solid var(--amber-dim);
+    background:var(--amber-dim);
+    padding:3px 7px;border-radius:3px;
+    letter-spacing:0.06em;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:24px;font-weight:600;margin:0;
+    letter-spacing:-0.01em;
+  }
+  .tagline{
+    max-width:560px;margin:6px auto 0;
+    font-size:13px;color:var(--paper-faint);
+  }
+
+  .stats{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:1px;background:var(--border);
+    margin:18px auto 0;max-width:560px;
+    border:1px solid var(--border);border-radius:10px;
+    overflow:hidden;
+  }
+  .stat{background:var(--surface);padding:12px 10px;text-align:center;}
+  .stat .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:20px;font-weight:600;color:var(--paper);
+  }
+  .stat.low .num{color:var(--red);}
+  .stat .lbl{font-size:11px;color:var(--paper-faint);margin-top:2px;text-transform:uppercase;letter-spacing:0.05em;}
+
+  .controls{
+    display:flex;gap:8px;margin:18px 0 14px;
+  }
+  .search{
+    flex:1;position:relative;
+  }
+  .search input{
+    width:100%;background:var(--surface);
+    border:1px solid var(--border);color:var(--paper);
+    padding:10px 12px 10px 34px;border-radius:8px;
+    font-size:14px;font-family:'Inter',sans-serif;
+  }
+  .search input:focus{outline:none;border-color:var(--border-strong);}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:0.5;}
+  select#categoryFilter{
+    background:var(--surface);border:1px solid var(--border);
+    color:var(--paper);border-radius:8px;padding:0 10px;
+    font-size:13px;font-family:'Inter',sans-serif;
+  }
+
+  .empty{
+    text-align:center;padding:60px 20px;color:var(--paper-faint);
+  }
+  .empty .stamp{
+    font-family:'Space Grotesk',sans-serif;font-size:16px;
+    color:var(--paper-dim);margin-bottom:6px;
+  }
+
+  .group-label{
+    font-size:11px;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--paper-faint);margin:20px 0 8px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .group-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    margin-bottom:10px;
+    display:flex;
+    position:relative;
+    overflow:hidden;
+    transition:border-color 0.15s;
+  }
+  .card.low-stock{border-color:var(--red-dim);}
+  .card.low-stock::before{
+    content:'LOW';
+    position:absolute;top:8px;right:-22px;
+    background:var(--red);color:#2A0F0D;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;font-weight:600;letter-spacing:0.08em;
+    padding:2px 24px;transform:rotate(40deg);
+  }
+  .card-main{
+    flex:1;min-width:0;padding:13px 14px;
+  }
+  .card-name{
+    font-size:15px;font-weight:500;color:var(--paper);
+    margin:0 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .card-meta{
+    font-size:12px;color:var(--paper-faint);
+    display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  }
+  .card-meta .cat-pill{
+    background:var(--surface-raised);border:1px solid var(--border);
+    padding:1px 7px;border-radius:20px;font-size:11px;color:var(--paper-dim);
+  }
+  .card-meta .sku{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;color:var(--amber);
+    letter-spacing:0.02em;
+  }
+  .card-note{
+    font-size:12px;color:var(--paper-faint);margin-top:4px;
+    font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .stub{
+    display:flex;align-items:center;
+    border-left:1px dashed var(--border-strong);
+    padding:0 8px;gap:2px;
+    background:var(--surface-raised);
+  }
+  .stub button{
+    width:30px;height:56px;border:none;background:transparent;
+    color:var(--paper-dim);font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    -webkit-user-select:none;user-select:none;
+  }
+  .stub button:active{color:var(--amber);}
+  .counter{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:16px;font-weight:600;color:var(--paper);
+    min-width:34px;text-align:center;
+    background:var(--ink);border:1px solid var(--border);
+    border-radius:4px;padding:4px 2px;
+  }
+  .card.low-stock .counter{color:var(--red);border-color:var(--red-dim);}
+
+  .card-actions{
+    display:flex;flex-direction:column;border-left:1px solid var(--border);
+  }
+  .card-actions button{
+    flex:1;border:none;background:transparent;color:var(--paper-faint);
+    width:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    border-bottom:1px solid var(--border);
+  }
+  .card-actions button:last-child{border-bottom:none;}
+  .card-actions button:active{background:var(--surface-raised);}
+  .card-actions button.del:active{color:var(--red);}
+  .card-actions button.edit:active{color:var(--amber);}
+
+  .fab{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    background:var(--amber);color:#2A1D08;
+    border:none;border-radius:30px;
+    padding:14px 26px;font-size:15px;font-weight:600;
+    font-family:'Inter',sans-serif;
+    display:flex;align-items:center;gap:8px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.4);
+    cursor:pointer;z-index:20;
+  }
+  .fab:active{transform:translateX(-50%) scale(0.97);}
+
+  .sheet-backdrop{
+    position:fixed;inset:0;background:rgba(0,0,0,0.55);
+    display:none;align-items:flex-end;justify-content:center;z-index:30;
+  }
+  .sheet-backdrop.open{display:flex;}
+  .sheet{
+    background:var(--surface);width:100%;max-width:560px;
+    border-radius:18px 18px 0 0;padding:20px 18px 28px;
+    border-top:1px solid var(--border-strong);
+    max-height:88vh;overflow-y:auto;
+  }
+  .sheet h2{
+    font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;
+    margin:0 0 16px;
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-size:12px;color:var(--paper-dim);
+    margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;
+  }
+  .field input,.field textarea,.field select{
+    width:100%;background:var(--surface-raised);
+    border:1px solid var(--border);color:var(--paper);
+    padding:11px 12px;border-radius:8px;
+    font-size:15px;font-family:'Inter',sans-serif;
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{
+    outline:none;border-color:var(--amber);
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .sheet-actions{display:flex;gap:10px;margin-top:6px;}
+  .btn{
+    flex:1;padding:13px;border-radius:8px;border:1px solid var(--border);
+    font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;
+  }
+  .btn.primary{background:var(--amber);color:#2A1D08;border-color:var(--amber);}
+  .btn.ghost{background:transparent;color:var(--paper-dim);}
+  .btn.danger{background:transparent;color:var(--red);border-color:var(--red-dim);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="mark">INV·01</span>
+  </div>
+  <h1>Stockroom</h1>
+  <p class="tagline">Your inventory, always on your phone.</p>
+</header>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><div class="num" id="statItems">0</div><div class="lbl">Items</div></div>
+    <div class="stat"><div class="num" id="statUnits">0</div><div class="lbl">Units</div></div>
+    <div class="stat low"><div class="num" id="statLow">0</div><div class="lbl">Low stock</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search items…">
+    </div>
+    <select id="categoryFilter"><option value="">All</option></select>
+  </div>
+
+  <div id="listContainer"></div>
+</div>
+
+<button class="fab" id="openAdd">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Add item
+</button>
+
+<div class="sheet-backdrop" id="sheetBackdrop">
+  <div class="sheet">
+    <h2 id="sheetTitle">Add item</h2>
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="fName" placeholder="e.g. Packing tape">
+    </div>
+    <div class="field">
+      <label>SKU</label>
+      <input type="text" id="fSku" placeholder="e.g. TAPE-002" style="font-family:'IBM Plex Mono',monospace;">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Category</label>
+        <input type="text" id="fCategory" placeholder="e.g. Supplies" list="catList">
+        <datalist id="catList"></datalist>
+      </div>
+      <div class="field">
+        <label>Unit</label>
+        <input type="text" id="fUnit" placeholder="e.g. rolls">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Quantity</label>
+        <input type="number" id="fQty" value="0" min="0">
+      </div>
+      <div class="field">
+        <label>Low stock at</label>
+        <input type="number" id="fThreshold" value="0" min="0">
+      </div>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="fNotes" rows="2" placeholder="Optional"></textarea>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost" id="cancelSheet">Cancel</button>
+      <button class="btn danger" id="deleteItemBtn" style="display:none;">Delete</button>
+      <button class="btn primary" id="saveItemBtn">Save item</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let items = [];
+let editingId = null;
+const STORAGE_KEY = 'stockroom-items';
+
+async function loadItems(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY);
+    items = res ? JSON.parse(res.value) : [];
+  }catch(e){
+    items = [];
+  }
+  render();
+}
+
+async function saveItems(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(items));
+  }catch(e){
+    console.error('Storage error', e);
+  }
+}
+
+function uid(){
+  return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function render(){
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const catFilter = document.getElementById('categoryFilter').value;
+
+  const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
+  const catSelect = document.getElementById('categoryFilter');
+  const currentVal = catSelect.value;
+  catSelect.innerHTML = '<option value="">All</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  catSelect.value = currentVal;
+
+  const catList = document.getElementById('catList');
+  catList.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">`).join('');
+
+  let filtered = items.filter(i => {
+    const matchSearch = !search || i.name.toLowerCase().includes(search) || (i.category||'').toLowerCase().includes(search) || (i.sku||'').toLowerCase().includes(search);
+    const matchCat = !catFilter || i.category === catFilter;
+    return matchSearch && matchCat;
+  });
+
+  document.getElementById('statItems').textContent = items.length;
+  document.getElementById('statUnits').textContent = items.reduce((s,i) => s + Number(i.qty||0), 0);
+  document.getElementById('statLow').textContent = items.filter(i => Number(i.threshold||0) > 0 && Number(i.qty||0) <= Number(i.threshold||0)).length;
+
+  const container = document.getElementById('listContainer');
+
+  if(items.length === 0){
+    container.innerHTML = `<div class="empty"><div class="stamp">Empty shelves</div>Add your first item to start tracking stock.</div>`;
+    return;
+  }
+  if(filtered.length === 0){
+    container.innerHTML = `<div class="empty"><div class="stamp">No matches</div>Try a different search or category.</div>`;
+    return;
+  }
+
+  const grouped = {};
+  filtered.sort((a,b) => a.name.localeCompare(b.name)).forEach(i => {
+    const c = i.category || 'Uncategorized';
+    if(!grouped[c]) grouped[c] = [];
+    grouped[c].push(i);
+  });
+
+  let html = '';
+  Object.keys(grouped).sort().forEach(cat => {
+    html += `<div class="group-label">${escapeHtml(cat)}</div>`;
+    grouped[cat].forEach(i => {
+      const isLow = Number(i.threshold||0) > 0 && Number(i.qty||0) <= Number(i.threshold||0);
+      html += `
+        <div class="card ${isLow ? 'low-stock' : ''}" data-id="${i.id}">
+          <div class="card-main">
+            <p class="card-name">${escapeHtml(i.name)}</p>
+            <div class="card-meta">
+              ${i.sku ? `<span class="sku">${escapeHtml(i.sku)}</span>` : ''}
+              <span class="cat-pill">${escapeHtml(i.category || 'Uncategorized')}</span>
+              ${i.unit ? `<span>${escapeHtml(i.unit)}</span>` : ''}
+            </div>
+            ${i.notes ? `<div class="card-note">${escapeHtml(i.notes)}</div>` : ''}
+          </div>
+          <div class="stub">
+            <button class="dec" data-id="${i.id}" aria-label="Decrease">−</button>
+            <span class="counter">${i.qty}</span>
+            <button class="inc" data-id="${i.id}" aria-label="Increase">+</button>
+          </div>
+          <div class="card-actions">
+            <button class="edit" data-id="${i.id}" aria-label="Edit">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+            </button>
+            <button class="del" data-id="${i.id}" aria-label="Delete">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>`;
+    });
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll('.inc').forEach(b => b.addEventListener('click', () => changeQty(b.dataset.id, 1)));
+  container.querySelectorAll('.dec').forEach(b => b.addEventListener('click', () => changeQty(b.dataset.id, -1)));
+  container.querySelectorAll('.edit').forEach(b => b.addEventListener('click', () => openEdit(b.dataset.id)));
+  container.querySelectorAll('.del').forEach(b => b.addEventListener('click', () => quickDelete(b.dataset.id)));
+}
+
+function changeQty(id, delta){
+  const item = items.find(i => i.id === id);
+  if(!item) return;
+  item.qty = Math.max(0, Number(item.qty||0) + delta);
+  saveItems();
+  render();
+}
+
+function quickDelete(id){
+  if(!confirm('Delete this item?')) return;
+  items = items.filter(i => i.id !== id);
+  saveItems();
+  render();
+}
+
+function openSheet(){
+  document.getElementById('sheetBackdrop').classList.add('open');
+}
+function closeSheet(){
+  document.getElementById('sheetBackdrop').classList.remove('open');
+  editingId = null;
+  document.getElementById('deleteItemBtn').style.display = 'none';
+  document.getElementById('sheetTitle').textContent = 'Add item';
+  ['fName','fSku','fCategory','fUnit','fNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fQty').value = 0;
+  document.getElementById('fThreshold').value = 0;
+}
+
+function openEdit(id){
+  const item = items.find(i => i.id === id);
+  if(!item) return;
+  editingId = id;
+  document.getElementById('sheetTitle').textContent = 'Edit item';
+  document.getElementById('fName').value = item.name;
+  document.getElementById('fSku').value = item.sku || '';
+  document.getElementById('fCategory').value = item.category || '';
+  document.getElementById('fUnit').value = item.unit || '';
+  document.getElementById('fQty').value = item.qty;
+  document.getElementById('fThreshold').value = item.threshold || 0;
+  document.getElementById('fNotes').value = item.notes || '';
+  document.getElementById('deleteItemBtn').style.display = 'block';
+  openSheet();
+}
+
+document.getElementById('openAdd').addEventListener('click', () => {
+  closeSheet();
+  openSheet();
+});
+document.getElementById('cancelSheet').addEventListener('click', closeSheet);
+document.getElementById('sheetBackdrop').addEventListener('click', (e) => {
+  if(e.target.id === 'sheetBackdrop') closeSheet();
+});
+
+document.getElementById('saveItemBtn').addEventListener('click', () => {
+  const name = document.getElementById('fName').value.trim();
+  if(!name){ alert('Give the item a name.'); return; }
+  const data = {
+    name,
+    sku: document.getElementById('fSku').value.trim(),
+    category: document.getElementById('fCategory').value.trim(),
+    unit: document.getElementById('fUnit').value.trim(),
+    qty: Math.max(0, Number(document.getElementById('fQty').value) || 0),
+    threshold: Math.max(0, Number(document.getElementById('fThreshold').value) || 0),
+    notes: document.getElementById('fNotes').value.trim()
+  };
+  if(editingId){
+    const item = items.find(i => i.id === editingId);
+    Object.assign(item, data);
+  }else{
+    items.push({ id: uid(), ...data });
+  }
+  saveItems();
+  render();
+  closeSheet();
+});
+
+document.getElementById('deleteItemBtn').addEventListener('click', () => {
+  if(!editingId) return;
+  if(!confirm('Delete this item?')) return;
+  items = items.filter(i => i.id !== editingId);
+  saveItems();
+  render();
+  closeSheet();
+});
+
+document.getElementById('searchInput').addEventListener('input', render);
+document.getElementById('categoryFilter').addEventListener('change', render);
+
+loadItems();
+</script>
+</body>
+</html>
